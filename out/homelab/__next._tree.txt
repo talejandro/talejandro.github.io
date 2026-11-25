@@ -1,6 +1,0 @@
-:HL["/_next/static/chunks/33o35f9vjiddm.css","style"]
-:HL["/_next/static/media/DepartureMono_Regular.p.108-7kaivsfnj.otf","font",{"crossOrigin":"","type":"font/otf"}]
-:HL["/_next/static/media/Vergilia.p.1vc5cmgyt6qxg.ttf","font",{"crossOrigin":"","type":"font/ttf"}]
-2:[["children",{"s":"__PAGE__","h":160}]]
-1:[["children",{"s":{"n":"section","t":"d","k":"homelab","s":["fonts"]},"h":65632,"c":"$Q2"}]]
-0:{"b":"CwUvTzOskYGrg6W210-f3","t":{"t":{"s":"","h":131152,"c":"$Q1"}}}
