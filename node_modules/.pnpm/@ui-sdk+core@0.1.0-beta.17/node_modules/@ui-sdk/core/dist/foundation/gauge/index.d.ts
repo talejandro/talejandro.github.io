@@ -1,0 +1,1 @@
+export { finite, formatGaugeValue, gaugeAria, type GaugeLabelDetails, type GaugeOptions, gaugeSettings, type GaugeSettings, gaugeApi, indicatorStyle, labelId, labelledBy, type NumberFormat, percentBetween, roundPercent, } from "./gauge.js";

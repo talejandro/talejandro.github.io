@@ -1,0 +1,1864 @@
+# ui-sdk for React
+
+> @ui-sdk/react renders ui-sdk's framework-free TypeScript core in React. How an interface behaves lives in the core; @ui-sdk/react turns each primitive into parts. No styles, no dependencies, no providers, no portals.
+
+This file is the context an agent needs to build with @ui-sdk/react: how React renders a primitive and the conventions every part shares, then every component with a link to its page. Read the pages of the components you use. It's generated from the docs, for this release.
+
+- [Core](./core.md): build a component, compose behaviors, and explore the foundations, from defining a primitive to working with state, the browser and text.
+- [Agents](./agents.md): letting an agent operate a page, and WebMCP.
+
+## Introduction
+
+These docs cover ui-sdk in React. Using another framework? See Vue, Svelte, Solid or Web Components. To build your own components from behaviors, see [Core](./core.md).
+
+`@ui-sdk/react` gives you components such as Select, Dialog, and Tabs, built on ui-sdk's behaviors. They handle interactions, focus, and ARIA attributes. You choose their markup and styles.
+
+Import the parts you need, put them together in your app, and style them with your own CSS.
+
+### Quick Start
+
+Copy this prompt into your agent:
+
+```text prompt
+Set up ui-sdk in this React project. It needs React 19 or newer.
+
+1. Install @ui-sdk/react and @ui-sdk/core with the project's package manager. If a release-age policy blocks the install, stop and ask me instead of changing it.
+2. Add a note to AGENTS.md, creating it if needed: before using ui-sdk, follow the ui-sdk skill if it's installed, and read node_modules/@ui-sdk/react/docs/llms.txt. To build a new component, also search node_modules/@ui-sdk/react/docs/core.md by heading, and read rendering.md next to it.
+3. If you support skills, run: npx skills@latest add vercel-labs/ui --skill ui-sdk
+```
+
+It installs ui-sdk and points your `AGENTS.md` at the docs that ship with the packages.
+
+### Set It Up Yourself
+
+- [Installation](./installation.md): Install the packages in your React app.
+- [First Component](./first-component.md): Add and style your first component.
+
+### Explore the Components
+
+The [Using Components guides](./parts-and-composition.md) cover patterns the components share, such as composing parts, handling state, and styling.
+
+## Installation
+
+Start with an app using React 19 and React DOM 19 or newer.
+
+### Install the Packages
+
+```bash
+npm install @ui-sdk/react @ui-sdk/core
+```
+
+`@ui-sdk/react` provides the React components. `@ui-sdk/core` provides their behavior and is a peer dependency. Install both so the components and any helpers you use share one copy of the core.
+
+If you use TypeScript, you'll also need `@types/react` 19.2.10 or newer.
+
+### Import a Component
+
+Import each component from its own entry:
+
+```tsx
+import { Button } from "@ui-sdk/react/button"
+import { Toggle } from "@ui-sdk/react/toggle"
+```
+
+A Dialog has separate parts for its trigger, content, and title. Import those parts from the same entry:
+
+```tsx
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogTrigger,
+} from "@ui-sdk/react/dialog"
+```
+
+There is no root import from `@ui-sdk/react`. Each [component page](./README.md) lists the parts you can use.
+
+### Add Your Styles
+
+Components are unstyled, so you style them with your app's CSS or with Tailwind CSS. [Styling and Animation](./styling-and-animation.md) covers both.
+
+For a default look to start from, import `@ui-sdk/core/web.css` once. In Next.js, import it at the top of `app/layout.tsx`. In a Vite app, import it at the top of `main.tsx`:
+
+```ts
+import "@ui-sdk/core/web.css"
+```
+
+With Tailwind CSS, import it in your global stylesheet instead, after Tailwind. `layer(components)` puts it above Tailwind's base styles, so they don't reset it, and below its utilities, so a class still wins. Declare [the ui-sdk layer](./styling-and-animation.md#the-ui-sdk-layer) above both:
+
+```css
+@layer ui-sdk;
+
+@import "tailwindcss";
+@import "@ui-sdk/core/web.css" layer(components);
+```
+
+You can render your first component without setting up a provider. If you use Next.js, [Server Rendering](./server-rendering.md) explains when your own components need `"use client"`.
+
+Continue with [First Component](./first-component.md) to add a working toggle to your app.
+
+## First Component
+
+Let's add a Bookmark toggle. Press it once to turn it on, then again to turn it off.
+
+If you haven't installed the packages yet, start with [Installation](./installation.md).
+
+### Create the Component
+
+Create `bookmark-button.tsx` next to your app component and render a `Toggle`:
+
+```tsx title="bookmark-button.tsx"
+import { Toggle } from "@ui-sdk/react/toggle"
+
+function BookmarkButton() {
+  return <Toggle>Bookmark</Toggle>
+}
+
+export { BookmarkButton }
+```
+
+`Toggle` renders a button. It keeps track of its pressed state, handles Enter and Space, and sets `aria-pressed` for screen readers.
+
+### Use It in Your App
+
+In your app component (`app.tsx` here), import and render `BookmarkButton`:
+
+```tsx title="app.tsx"
+import { BookmarkButton } from "./bookmark-button"
+
+function App() {
+  return <BookmarkButton />
+}
+
+export { App }
+```
+
+Open your app. You should see a button labeled Bookmark. Next, add styles so you can tell when it is pressed.
+
+### Add Styles
+
+When the toggle is pressed, it has a `data-pressed` attribute. Use that attribute to change its appearance.
+
+With Tailwind CSS configured in your app, add utility classes to `className`. The `data-pressed:` variant applies while the toggle is pressed:
+
+```tsx title="bookmark-button.tsx"
+import { Toggle } from "@ui-sdk/react/toggle"
+
+function BookmarkButton() {
+  return (
+    <Toggle className="inline-flex h-8 items-center rounded-md border border-neutral-300 px-3 text-sm font-medium hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 data-pressed:bg-neutral-900 data-pressed:text-white">
+      Bookmark
+    </Toggle>
+  )
+}
+
+export { BookmarkButton }
+```
+
+Try the styled toggle:
+
+```tsx title="first-component.tsx"
+import { Toggle } from "@ui-sdk/react/toggle"
+
+function Example() {
+  return <Toggle data-variant="outline">Bookmark</Toggle>
+}
+
+export { Example }
+```
+
+Click Bookmark to turn it on or off. A filled background means it is on. You can also focus the button with Tab and press Enter or Space.
+
+Keep the label the same in both states. `aria-pressed` tells a screen reader whether the toggle is on.
+
+### Keep Going
+
+- [Toggle](./components/toggle.md) covers disabled states, controlled state, and groups of toggles.
+- [Components](./README.md) lists the other components you can add with the same install.
+- [Parts and Composition](./parts-and-composition.md) shows how to put a component with several parts together.
+- [State and Events](./state-and-events.md) shows how to read changes and control state from your app.
+- [Styling and Animation](./styling-and-animation.md) covers state attributes, CSS variables, and transitions.
+
+## Parts and Composition
+
+A component can have several parts. A Popover has a root to hold its state, a trigger to open it, and content to show.
+
+### Put Parts Together
+
+Import the parts you need and nest them as shown in the component's Composition:
+
+```tsx
+import {
+  Popover,
+  PopoverClose,
+  PopoverContent,
+  PopoverTitle,
+  PopoverTrigger,
+} from "@ui-sdk/react/popover"
+
+function Example() {
+  return (
+    <Popover>
+      <PopoverTrigger>Details</PopoverTrigger>
+      <PopoverContent sideOffset={8}>
+        <PopoverTitle>Project Details</PopoverTitle>
+        <p>Last updated today.</p>
+        <PopoverClose>Done</PopoverClose>
+      </PopoverContent>
+    </Popover>
+  )
+}
+
+export { Example }
+```
+
+`Popover` shares state with its parts without adding an element. Other roots, such as `Tabs`, do render an element. Each component's page shows its structure.
+
+Parts find their root through React context. You can put your own components or layout elements between them.
+
+### Choose the Element
+
+Use `render` to replace a part's default element. For example, render a menu item as a link:
+
+```tsx
+import { Menu, MenuContent, MenuItem, MenuTrigger } from "@ui-sdk/react/menu"
+
+function Example() {
+  return (
+    <Menu>
+      <MenuTrigger>Account</MenuTrigger>
+      <MenuContent>
+        <MenuItem render={<a href="/settings" />}>Settings</MenuItem>
+      </MenuContent>
+    </Menu>
+  )
+}
+
+export { Example }
+```
+
+The part passes its attributes, handlers, and ref to the element. A custom component used here needs to forward those props and the ref to its DOM element.
+
+Your event handler runs first. Calling `event.preventDefault()` skips the part's built-in handler. Class names, styles, and refs combine.
+
+### Read the State
+
+Pass a function to `children` when the content depends on state:
+
+```tsx
+"use client"
+
+import { Toggle } from "@ui-sdk/react/toggle"
+
+function Example() {
+  return (
+    <Toggle aria-label="Mute">
+      {(state) => (state.pressed ? "Mute on" : "Mute off")}
+    </Toggle>
+  )
+}
+
+export { Example }
+```
+
+Keep the accessible name stable when the content changes. Here, `aria-label="Mute"` names the toggle and `aria-pressed` reports its state.
+
+`render` can also be a function of the props and state. [Custom Parts](./custom-parts.md) covers writing a part with logic of its own.
+
+### Name the Control
+
+Use the component's label or title part, such as `FieldLabel` or `DialogTitle`. For a control without visible text, give it an `aria-label`.
+
+Parts manage their own roles, IDs, and ARIA state. Those attributes take precedence over conflicting props passed directly to the part. Props on the element passed to `render` can override them, so leave the managed attributes intact. If you use a render function, forward the supplied props to its element. A name or typing hint you pass replaces the part's own: `aria-label`, `aria-labelledby`, `aria-description`, `title`, `autoComplete`, `autoCapitalize`, `autoCorrect`, `inputMode` and `spellCheck`. Roles, `tabindex`, references like `aria-controls` and `aria-describedby`, state attributes and `data-slot` stay the part's, since its behavior reads them.
+
+## State and Events
+
+Components manage their own state unless you pass a controlled value. A change callback lets you respond in either case.
+
+### Set the Starting Value
+
+Use a default prop to choose the starting state. Here, Bold starts pressed and changes when you click it:
+
+```tsx
+import { Toggle } from "@ui-sdk/react/toggle"
+
+function Example() {
+  return <Toggle defaultPressed>Bold</Toggle>
+}
+
+export { Example }
+```
+
+The prop depends on the component: `defaultPressed`, `defaultChecked`, `defaultOpen`, or `defaultValue`.
+
+### Control the Value
+
+Pass the value and its change callback to keep it in React state:
+
+```tsx
+"use client"
+
+import { Toggle } from "@ui-sdk/react/toggle"
+import { useState } from "react"
+
+function Example() {
+  const [pressed, setPressed] = useState(false)
+
+  return (
+    <>
+      <Toggle pressed={pressed} onPressedChange={setPressed}>
+        Bold
+      </Toggle>
+      <output>{pressed ? "On" : "Off"}</output>
+    </>
+  )
+}
+
+export { Example }
+```
+
+Other components use pairs such as `open` and `onOpenChange`, or `value` and `onValueChange`. The component requests the next value; your callback updates the state you pass back. If you keep passing `false`, the toggle stays off.
+
+To keep a value in the URL, still update your state in the callback, then navigate. A value that changes only when the navigation finishes leaves the component showing the old one until then, and logs a warning in development.
+
+### Understand a Change
+
+The first callback argument is the requested value. The second, `details`, tells you where the request came from and lets you cancel it:
+
+| Detail     | What It Tells You                                                                                     |
+| ---------- | ----------------------------------------------------------------------------------------------------- |
+| `reason`   | What requested the change, such as `trigger-press` or `escape-key`. Each component lists its reasons. |
+| `event`    | The DOM event, when the change came from one.                                                         |
+| `source`   | `keyboard`, `mouse`, `touch`, `pen`, `virtual`, `programmatic`, or `agent`.                           |
+| `cancel()` | Stops the requested change.                                                                           |
+
+For example, keep a popover open when someone clicks outside it:
+
+```tsx
+"use client"
+
+import {
+  Popover,
+  PopoverClose,
+  PopoverContent,
+  PopoverTitle,
+  PopoverTrigger,
+} from "@ui-sdk/react/popover"
+
+function Example() {
+  return (
+    <Popover
+      onOpenChange={(open, details) => {
+        if (!open && details.reason === "outside-press") {
+          details.cancel()
+        }
+      }}
+    >
+      <PopoverTrigger>Details</PopoverTrigger>
+      <PopoverContent>
+        <PopoverTitle>Project Details</PopoverTitle>
+        <p>Last updated today.</p>
+        <PopoverClose>Done</PopoverClose>
+      </PopoverContent>
+    </Popover>
+  )
+}
+
+export { Example }
+```
+
+The Done button and Escape still close the popover. Cancellation works for controlled and uncontrolled state. Add `debug` to a root to log changes and their reasons while you work.
+
+### Empty and Multiple Values
+
+Select, Tabs, and Radio Group report `null` when nothing is selected. A multiple Select or Combobox uses an array. Accordion and Toggle Group always use arrays.
+
+To change a component from outside its React tree, use a [Controller](./controllers.md).
+
+## Styling and Animation
+
+Parts render without styles. The component demos use plain CSS, and the same state attributes and CSS variables work with Tailwind CSS or any other stylesheet.
+
+### Style a Part
+
+Every part has a `data-slot` attribute. State adds attributes such as `data-open`, `data-pressed`, or `data-disabled`:
+
+```tsx
+import { Toggle } from "@ui-sdk/react/toggle"
+
+function Example() {
+  return (
+    <Toggle className="rounded-md border border-neutral-300 px-2.5 py-1.5 text-sm data-pressed:bg-neutral-100 data-disabled:opacity-50">
+      Bold
+    </Toggle>
+  )
+}
+
+export { Example }
+```
+
+Most state attributes are present or absent. Others have values, such as `data-side="top"` or `data-orientation="vertical"`. Each component's Styling section lists its attributes and CSS variables. Use these rather than generated IDs, which can change.
+
+### CSS Modules
+
+Import a CSS Module and pass its class to the part. State selectors work the same way:
+
+```tsx
+import { Toggle } from "@ui-sdk/react/toggle"
+import styles from "./toggle.module.css"
+
+function Example() {
+  return <Toggle className={styles.toggle}>Bold</Toggle>
+}
+
+export { Example }
+```
+
+```css title="toggle.module.css"
+.toggle {
+  cursor: default;
+  border: 1px solid var(--input, #e5e5e5);
+  border-radius: 1.125rem;
+  background: transparent;
+  padding: 0.375rem 0.625rem;
+  color: inherit;
+  font: inherit;
+  font-size: 0.875rem;
+}
+
+.toggle[data-pressed] {
+  background: var(--muted, #f5f5f5);
+}
+
+.toggle[data-disabled] {
+  opacity: 0.5;
+}
+
+.toggle:focus-visible {
+  outline: 2px solid var(--ring, #a3a3a3);
+  outline-offset: 2px;
+}
+```
+
+### Use State in React
+
+`className` and `style` can be functions of the part's state:
+
+```tsx
+"use client"
+
+import { Toggle } from "@ui-sdk/react/toggle"
+
+function Example() {
+  return (
+    <Toggle
+      className={(state) => (state.pressed ? "font-bold" : "font-normal")}
+    >
+      Bold
+    </Toggle>
+  )
+}
+
+export { Example }
+```
+
+With Tailwind, you can also use attribute variants, such as `data-pressed:font-bold`.
+
+### Animate Opening and Closing
+
+Popup content gets `data-starting-style` before it enters and `data-ending-style` while it exits. The content stays mounted until its exit transition or animation finishes.
+
+```tsx
+import { Popover, PopoverContent, PopoverTrigger } from "@ui-sdk/react/popover"
+
+function Example() {
+  return (
+    <Popover>
+      <PopoverTrigger>Details</PopoverTrigger>
+      <PopoverContent
+        aria-label="Project details"
+        className="origin-(--transform-origin) transition-[opacity,scale] duration-150 data-starting-style:scale-96 data-starting-style:opacity-0 data-ending-style:scale-96 data-ending-style:opacity-0 motion-reduce:transition-none"
+      >
+        Last updated today.
+      </PopoverContent>
+    </Popover>
+  )
+}
+
+export { Example }
+```
+
+Put exit styles on `data-ending-style`. `data-closed` describes the state, but doesn't keep the element around for an exit.
+
+An exit animation you start from script is waited for too, when it starts in the same task that closes the popup, like in its open change callback. One started later, from an effect or an observer, isn't.
+
+Popups also provide `--anchor-width` and `--available-height` for sizing. See [Popups](./popups.md) for placement and mounting options.
+
+### The ui-sdk Layer
+
+A few behaviors need a little CSS, like keeping a closed popup hidden or dimming the page behind a sheet, so ui-sdk adds it to the page in a cascade layer named `ui-sdk`. Declare that layer at the top of your global stylesheet, the one your app's entry or root layout imports, so your own styles win over it wherever the page puts them. With Tailwind, put it above `@import "tailwindcss"`:
+
+```css
+@layer ui-sdk;
+```
+
+A CSS Module loads with its component, too late to come first, so keep the line in the global stylesheet.
+
+ui-sdk adds this CSS once a component mounts, so HTML rendered on the server doesn't have it until the page hydrates. Closed content kept in the page, like a tooltip's, carries `hidden`, and a class that sets `display` shows it until then. Tailwind's base styles already hide `hidden` elements. With other CSS, add the same rule to your global stylesheet:
+
+```css
+@layer ui-sdk {
+  :where([data-slot][hidden]:not([hidden="until-found"])) {
+    display: none !important;
+  }
+}
+```
+
+It leaves `hidden="until-found"` alone, so find in page can still open a closed panel.
+
+The same layer takes the browser's own popover border, padding and background off Popover, Dialog, Drawer, Tooltip and Hover Card content. Menu, Select, Combobox and Date Picker content keep them, so give those parts a `border`, `padding` and `background` of your own. `web.css` already does.
+
+### Content Security Policy
+
+A Content Security Policy without `'unsafe-inline'` in `style-src` blocks the CSS ui-sdk adds. Give ui-sdk your policy's nonce with a meta tag in the page's `<head>`:
+
+```html
+<meta property="csp-nonce" nonce="your-nonce" />
+```
+
+With Vite, set `html.cspNonce` in your Vite config to a placeholder, and Vite writes this tag for you. Your server replaces the placeholder with a new nonce on each request.
+
+In Next.js, render the tag in the root layout's `<head>`, with the nonce your middleware passes in a request header:
+
+```tsx
+import { headers } from "next/headers"
+
+export default async function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  const nonce = (await headers()).get("x-nonce") ?? undefined
+  return (
+    <html lang="en">
+      <head>
+        <meta property="csp-nonce" nonce={nonce} />
+      </head>
+      <body>{children}</body>
+    </html>
+  )
+}
+```
+
+Pages rendered on the server also carry a few `style` attributes, like the one that hides a select's native input, so the policy needs `style-src-attr 'unsafe-inline'` too.
+
+If your policy has no nonce for styles, add the tag without the `nonce` attribute. ui-sdk then adds its CSS as constructed style sheets, which no policy blocks. If your code replaces `document.adoptedStyleSheets`, ui-sdk adds its sheets back the next time a component mounts.
+
+## Controllers
+
+A controller connects code to a mounted component. Use one when the button or action that changes a component lives somewhere else.
+
+### Connect a Controller
+
+Create the controller once and pass it to the root:
+
+```tsx
+"use client"
+
+import { createToggleController, Toggle } from "@ui-sdk/react/toggle"
+import { useState } from "react"
+
+function Example() {
+  const [toggle] = useState(() => createToggleController())
+
+  return (
+    <>
+      <button onClick={() => toggle.toggle()}>Toggle Bold</button>
+      <Toggle controller={toggle}>Bold</Toggle>
+    </>
+  )
+}
+
+export { Example }
+```
+
+Controller methods go through the component's change callbacks. They follow the same controlled state and cancellation rules as user input.
+
+Each component lists the methods it supports, such as `open()`, `close()`, `setValue()`, or `focus()`. Methods that change state accept an optional reason for the callback.
+
+A read like `toggle.isPressed()` answers when you call it, so call it from an event handler or async code. It returns `undefined` until the component mounts, and a render doesn't update when the state changes. To render the state, keep it in state with `pressed` and `onPressedChange`.
+
+### Share a Popup
+
+A trigger outside a popup can use its controller. Pass a `payload` to tell the content which item was opened:
+
+```tsx
+"use client"
+
+import {
+  createPopoverController,
+  Popover,
+  PopoverContent,
+  PopoverTitle,
+  PopoverTrigger,
+} from "@ui-sdk/react/popover"
+import { useState } from "react"
+
+function Example() {
+  const [editor] = useState(() => createPopoverController<string>())
+
+  return (
+    <>
+      <PopoverTrigger controller={editor} payload="Notes">
+        Edit Notes
+      </PopoverTrigger>
+      <PopoverTrigger controller={editor} payload="Tasks">
+        Edit Tasks
+      </PopoverTrigger>
+      <Popover controller={editor}>
+        <PopoverContent>
+          {(state) => (
+            <PopoverTitle>Edit {String(state.payload ?? "")}</PopoverTitle>
+          )}
+        </PopoverContent>
+      </Popover>
+    </>
+  )
+}
+
+export { Example }
+```
+
+Both triggers open the same popover. This is useful for a table with an edit button on each row.
+
+### Wait for a Popup to Close
+
+A popup controller's `open()` returns a promise. It settles when the popup closes, with its reason and return value:
+
+```ts
+const result = await editor.open({ payload: "Notes" })
+console.log(result.reason, result.returnValue)
+```
+
+For a confirmation dialog, [Alert Dialog](./components/alert-dialog.md) provides `createConfirm()`, which gives you a function you can await.
+
+## Popups
+
+Popovers, menus, selects, and dialogs use the browser's top layer. They render in place, above the page, so you don't need a Portal or Positioner part. Their events bubble through the elements around them like any other child's, so a click handler or a link wrapped around a popup also gets the clicks inside it. Keep popups outside clickable cards and links.
+
+### Place the Content
+
+Set placement on the content part:
+
+```tsx
+import { Popover, PopoverContent, PopoverTrigger } from "@ui-sdk/react/popover"
+
+function Example() {
+  return (
+    <Popover>
+      <PopoverTrigger>Details</PopoverTrigger>
+      <PopoverContent side="bottom" align="start" sideOffset={8}>
+        Last updated today.
+      </PopoverContent>
+    </Popover>
+  )
+}
+
+export { Example }
+```
+
+The popup flips or shifts when there isn't enough room.
+
+| Prop               | What It Does                                                                                         |
+| ------------------ | ---------------------------------------------------------------------------------------------------- |
+| `side`             | Chooses `top`, `bottom`, `left`, `right`, `start`, or `end`. Start and end follow reading direction. |
+| `align`            | Aligns the popup to the `start`, `center`, or `end` of that side.                                    |
+| `sideOffset`       | Sets the gap from the anchor, in pixels.                                                             |
+| `alignOffset`      | Shifts the popup along its side, in pixels.                                                          |
+| `collisionPadding` | Leaves space from the window's edges.                                                                |
+| `arrowPadding`     | Keeps an arrow away from the popup's corners.                                                        |
+
+An `anchor` can position the popup against another element. The component's page lists the anchors it accepts.
+
+### Control Dismissal
+
+Set `dismissible={false}` to stop Escape, outside presses, focus leaving, Back, and sheet swipes from closing a popup. Its trigger, Close part, and controller can still close it.
+
+```tsx
+<Popover
+  dismissible={false}
+  onDismissAttempt={(details) => console.log(details.reason)}
+>
+  {/* Trigger, content, and a Close part. */}
+</Popover>
+```
+
+Use [State and Events](./state-and-events.md) when you want to cancel only a particular reason, such as an outside press while a form has unsaved changes.
+
+### Modals and Sheets
+
+`modal` makes the rest of the page inert and locks scrolling. Each component documents its default.
+
+Menu, Select, Combobox, Autocomplete, Popover, and Dialog support `presentation="auto"` to become a sheet on small touch screens. Use `presentation="sheet"` to always show a sheet.
+
+```tsx
+<Popover presentation="auto">{/* Trigger and content. */}</Popover>
+```
+
+### Focus
+
+Dialogs, alert dialogs, drawers, and popovers move focus into their content when they open. Where it lands depends on how they opened:
+
+| Opened With                                  | Focus Goes To                                                |
+| -------------------------------------------- | ------------------------------------------------------------ |
+| Keyboard, screen reader, mouse, pen, or code | The element `initialFocus` picks.                            |
+| Touch                                        | The content itself, so no on-screen keyboard appears.        |
+| Hover                                        | Nowhere. Focus stays where it is.                            |
+| Rendered open                                | Nowhere, except in a dialog, which takes focus as it mounts. |
+
+`initialFocus` defaults to `"auto"`: the first focusable element, or the content when it has none. A dialog tries an element with `autofocus` first, and an alert dialog tries its first Close part. Pass `"content"` to focus the content itself, `"none"` to leave focus alone, or a CSS selector, an element, or a function that returns one. When focus lands on a text field that already holds a value, its text is selected, so typing replaces it.
+
+`modal` decides whether Tab can leave. With `true` or `"trap-focus"`, Tab and Shift+Tab wrap inside the content. With `false`, Tab moves from the trigger into a popover and on to the page after it, and focus leaving closes the popover. A non-modal dialog stays open.
+
+When a popup closes while focus is inside it, focus returns to the trigger. If the trigger is gone or can't take focus, focus goes to the element focused before the popup opened, then where the popup it was opened from would return focus, then to the nearest focusable element after where the trigger was. A popup a controller opened returns to the element focused before it first. Set `finalFocus` to `"none"` to leave focus alone, or to a selector, an element, or a function to send it somewhere else. Closing because focus moved away never moves it back, and neither does pressing something focusable outside a non-modal popup.
+
+Menus, selects, and comboboxes handle focus within their own lists, and tooltips never move it. Each component's page covers its own.
+
+### Mounting and Containers
+
+Closed content unmounts after its exit animation. `keepMounted` leaves it in the page, hidden. `onOpenChangeComplete` runs when opening or closing finishes, including animations.
+
+Use `container` to render into another element, a shadow root, or an element in an iframe. Focus, Escape, and scroll locking then work in the document and shadow root the content renders in. Keep a dialog containing a form outside any surrounding form, or move its content with `container`, to avoid nested forms.
+
+In a tree a hidden `<Activity>` or a Suspense fallback hides, an open popup hides with it, from its `container` too, and comes back open when the tree shows, with focus in it if it's modal.
+
+[Styling and Animation](./styling-and-animation.md) shows how to animate the content.
+
+### Toasts and Confirms
+
+Mount `OverlayHost` once near your app's root, then call `toast()` from event handlers:
+
+```tsx
+"use client"
+
+import { OverlayHost } from "@ui-sdk/react/overlays"
+import { toast } from "@ui-sdk/react/toast"
+
+function Example() {
+  return (
+    <>
+      <OverlayHost />
+      <button onClick={() => toast.success("Saved")}>Save</button>
+    </>
+  )
+}
+
+export { Example }
+```
+
+See [Toast](./components/toast.md) and [Alert Dialog](./components/alert-dialog.md) for the complete APIs.
+
+## Lists and Menus
+
+Select, Combobox, Autocomplete, Listbox, and Trigger Menu accept items as data. Use this when your choices already come from an array. You can also compose their item parts yourself.
+
+### Start with Strings
+
+Give a Select an array and render its trigger and content:
+
+```tsx
+import {
+  Select,
+  SelectContent,
+  SelectTrigger,
+  SelectValue,
+} from "@ui-sdk/react/select"
+
+function Example() {
+  return (
+    <Select items={["Apple", "Banana", "Pear"]}>
+      <SelectTrigger aria-label="Fruit">
+        <SelectValue placeholder="Choose a fruit" />
+      </SelectTrigger>
+      <SelectContent />
+    </Select>
+  )
+}
+
+export { Example }
+```
+
+Each string is both the value and its label. Use objects when those need to differ:
+
+```tsx
+<Select
+  items={[
+    { value: "apple", label: "Apple" },
+    { value: "banana", label: "Banana", disabled: true },
+  ]}
+>
+  {/* Trigger and content. */}
+</Select>
+```
+
+Items can also have `keywords` for searching. Group them with `{ type: "group", label, items }`, or separate them with `{ type: "separator" }`. Type the array with `ListData`, so each entry is checked where you write it:
+
+```tsx
+import type { ListData } from "@ui-sdk/react/select"
+
+const fruits: ListData = [
+  { value: "apple", label: "Apple", keywords: ["red"] },
+  { type: "separator" },
+  { type: "group", label: "Citrus", items: ["Lemon", "Lime"] },
+]
+```
+
+Command, Menu and Trigger Menu take the same entries, plus fields of their own like a command's `shortcut`. Type them with `CommandData`, `MenuData` and `TriggerMenuData`. Tree takes `TreeItemData[]`.
+
+If the value itself is an object, provide `itemToValue` for its submitted string and `itemToLabel` for its displayed text. [Select](./components/select.md) and [Combobox](./components/combobox.md) show complete examples.
+
+### Style the Items
+
+Items from data render as bare parts, with no classes, check marks or arrows. To style them, render the parts yourself. For an array you have, map it into items, with your classes inline:
+
+```tsx
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectItemIndicator,
+  SelectTrigger,
+  SelectValue,
+} from "@ui-sdk/react/select"
+
+const fruits = [
+  { value: "apple", label: "Apple" },
+  { value: "banana", label: "Banana" },
+]
+
+function Example() {
+  return (
+    <Select items={fruits}>
+      <SelectTrigger aria-label="Fruit">
+        <SelectValue placeholder="Choose a fruit" />
+      </SelectTrigger>
+      <SelectContent className="rounded-2xl bg-white p-1">
+        {fruits.map((fruit) => (
+          <SelectItem
+            key={fruit.value}
+            value={fruit.value}
+            className="flex rounded-xl px-2 py-1.5 data-highlighted:bg-neutral-100"
+          >
+            {fruit.label}
+            <SelectItemIndicator className="ms-auto">✓</SelectItemIndicator>
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  )
+}
+
+export { Example }
+```
+
+Keeping `items` on the select lets it show the chosen label before the list first renders. Searchable components still filter the items you render: the ones that don't match are hidden.
+
+Items that only exist in state, like results from a server, render from the list's children function, with `state.items`:
+
+```tsx
+<ComboboxList>
+  {(state) =>
+    (state.items as { value: string; label: string }[]).map((item) => (
+      <ComboboxItem
+        key={item.value}
+        value={item.value}
+        className="rounded-xl px-2 py-1.5 data-highlighted:bg-neutral-100"
+      >
+        {item.label}
+      </ComboboxItem>
+    ))
+  }
+</ComboboxList>
+```
+
+### Search and Load Items
+
+Searchable components accept a `filter` to change how typing narrows their items. For data from a server, [Async Options](./hooks/async-options.md) handles loading, debouncing, and aborting stale requests.
+
+For a large list, pass every option through `items` and render only the visible rows. [Select](./components/select.md#virtualized) and [Combobox](./components/combobox.md#virtualized) show how.
+
+### Define a Menu
+
+A `MenuData` array describes actions, separators, groups, and submenus. A plain string is an action whose value and label are the string:
+
+```tsx
+"use client"
+
+import { Menu, MenuTrigger, type MenuData } from "@ui-sdk/react/menu"
+
+const actions: MenuData = [
+  { value: "open", label: "Open", shortcut: "mod+o" },
+  { type: "separator" },
+  {
+    type: "submenu",
+    label: "Share",
+    items: [{ value: "email", label: "Email" }],
+  },
+]
+
+function Example() {
+  return (
+    <Menu items={actions} onAction={(value) => console.log(value)}>
+      <MenuTrigger>File</MenuTrigger>
+    </Menu>
+  )
+}
+
+export { Example }
+```
+
+To style it, put your own `MenuContent` in the menu and render its items from the same array, as [Menu](./components/menu.md#menus-as-data) shows. That page also covers checkbox items, radio groups, and nested menus.
+
+### Keys and Shortcuts
+
+`loop` controls whether arrow keys wrap around a list. Components that support `orientation` use it to choose the navigation axis.
+
+A trigger's `shortcut="mod+k"` opens it from elsewhere on the page. `mod` means Command on Apple platforms and Control elsewhere. A data menu runs item shortcuts while closed; a manually rendered MenuItem's shortcut only displays the keys.
+
+[Shortcuts](./hooks/shortcuts.md) covers registering your own. Page shortcuts pause while a modal is open, and ordinary typing in text fields stays typing.
+
+## Forms
+
+Give a control a `name` to include its value in a form. This works for Select and Combobox as well as inputs and checkboxes.
+
+### Submit a Value
+
+```tsx
+import { Checkbox } from "@ui-sdk/react/checkbox"
+
+function Example() {
+  return (
+    <form action="/preferences" method="post">
+      <label>
+        <Checkbox name="updates" value="yes" defaultChecked />
+        Email me updates
+      </label>
+      <button type="submit">Save</button>
+      <button type="reset">Reset</button>
+    </form>
+  )
+}
+
+export { Example }
+```
+
+The checkbox submits `updates=yes` when checked. Reset restores its default value.
+
+### Reset a Controlled Value
+
+A reset also goes through `onCheckedChange`. Update your React state there, just as you would after a click:
+
+```tsx
+"use client"
+
+import { Checkbox, type CheckedState } from "@ui-sdk/react/checkbox"
+import { useState } from "react"
+
+function Example() {
+  const [checked, setChecked] = useState<CheckedState>(true)
+  const [reason, setReason] = useState("No change yet")
+
+  return (
+    <form>
+      <label>
+        <Checkbox
+          name="updates"
+          defaultChecked
+          checked={checked}
+          onCheckedChange={(next, details) => {
+            setChecked(next)
+            setReason(details.reason)
+          }}
+        />
+        Email me updates
+      </label>
+      <button type="reset">Reset</button>
+      <output>{reason}</output>
+    </form>
+  )
+}
+
+export { Example }
+```
+
+Uncheck the box, then press Reset. `defaultChecked` supplies the reset value, and the callback receives `true` with reason `"reset"`. The callback runs when reset requests a different value; it does not run if the checkbox is already at its default. Without `defaultChecked`, a reset leaves a controlled checkbox as it is, so your state stays the only source of its value.
+
+### Label and Validate a Field
+
+`Field` connects a control to its label, description, and error message:
+
+```tsx
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from "@ui-sdk/react/field"
+import { Input } from "@ui-sdk/react/input"
+
+function Example() {
+  return (
+    <Field name="email">
+      <FieldLabel>Email</FieldLabel>
+      <Input type="email" required />
+      <FieldDescription>We'll only use it for receipts.</FieldDescription>
+      <FieldError />
+    </Field>
+  )
+}
+
+export { Example }
+```
+
+You can use a Textarea, Checkbox, Switch, Radio Group, or Select in place of the Input. [Field](./components/field.md) shows how they connect.
+
+These props follow native form conventions on controls that support them:
+
+| Prop       | What It Does                                                                |
+| ---------- | --------------------------------------------------------------------------- |
+| `name`     | Sets the submitted field name. Without one, no value is submitted.          |
+| `required` | Requires a value before the form can submit.                                |
+| `disabled` | Prevents interaction and leaves the control out of the submission.          |
+| `readOnly` | Prevents edits while keeping the control focusable and its value submitted. |
+| `form`     | Connects a control to a form by ID when it's outside that form.             |
+
+### Handle a Submission
+
+On a normal submit, the browser checks constraints such as `required` and `type="email"` before running your handler.
+
+Your server may still reject a valid-looking value. Pass `invalid` to the field and show the server’s message. When the user edits the field, clear the message and return `invalid` to `undefined` so the field uses native validation again. This example expects a `/api/preferences` endpoint:
+
+```tsx
+"use client"
+
+import { Field, FieldError, FieldLabel } from "@ui-sdk/react/field"
+import { Input } from "@ui-sdk/react/input"
+import * as React from "react"
+
+function Example() {
+  const [error, setError] = React.useState("")
+
+  async function save(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const response = await fetch("/api/preferences", {
+      method: "POST",
+      body: new FormData(event.currentTarget),
+    })
+    setError(response.ok ? "" : "That email is already taken.")
+  }
+
+  return (
+    <form onSubmit={save}>
+      <Field name="email" invalid={error ? true : undefined}>
+        <FieldLabel>Email</FieldLabel>
+        <Input type="email" required onValueChange={() => setError("")} />
+        <FieldError>{(state) => error || state.message}</FieldError>
+      </Field>
+      <button type="submit">Save</button>
+    </form>
+  )
+}
+
+export { Example }
+```
+
+Without a handler, the form submits through its `action`, including a React server action.
+
+## Server Rendering
+
+ui-sdk parts render their initial HTML on the server, including ARIA state and keyboard tab stops. Hydration connects the event handlers in the browser.
+
+### Render from a Server Component
+
+In an app with React Server Components, such as Next.js, you can render ui-sdk components directly from a server page. Their modules already include `"use client"`:
+
+```tsx
+import { Toggle } from "@ui-sdk/react/toggle"
+
+function Page() {
+  return <Toggle defaultPressed>Bold</Toggle>
+}
+
+export { Page }
+```
+
+The server sends a button with `aria-pressed="true"`. It can toggle after hydration. Native HTML behavior, such as submitting a form, can work before hydration.
+
+### Wrappers in a Server Component
+
+A wrapper that only renders markup can stay on the server. `renderElement` lets it support the same `render` prop as other parts:
+
+```tsx
+import { renderElement, type PartProps } from "@ui-sdk/react/primitive"
+
+function Card({ render, ...props }: PartProps<"div">) {
+  return renderElement("div", { ...props, "data-card": "" }, render)
+}
+
+function Page() {
+  return (
+    <Card render={<section />} className="card">
+      Your plan renews on May 1.
+    </Card>
+  )
+}
+
+export { Card, Page }
+```
+
+The server renders a `section` with the card’s props.
+
+Put custom parts built with `usePrimitive`, `usePart`, or `createParts` in a client module. A Server Component can then render those exported parts, just like `Toggle` above.
+
+### Add Your Own Client Boundary
+
+If your component owns React state, callbacks, or render functions, put `"use client"` at the top of its entry file:
+
+```tsx title="mute-button.tsx"
+"use client"
+
+import { Toggle } from "@ui-sdk/react/toggle"
+import { useState } from "react"
+
+function MuteButton() {
+  const [muted, setMuted] = useState(false)
+
+  return (
+    <>
+      <Toggle pressed={muted} onPressedChange={setMuted}>
+        Mute
+      </Toggle>
+      <output>{muted ? "Sound is off" : "Sound is on"}</output>
+    </>
+  )
+}
+
+export { MuteButton }
+```
+
+Render `MuteButton` from your server page. Clicking Mute changes its pressed state and the output; the button keeps the same accessible name.
+
+Keep ordinary callbacks and render functions inside the client boundary. They cannot cross from a Server Component as props.
+
+### Saved Preferences and Storage
+
+Preferences like a color scheme or an emoji skin tone are saved in the browser, so the server can't render them. [Preferences](./core.md#preferences) covers the preferences themselves; this is how they fit server rendering.
+
+#### Show Them Before Hydration
+
+Render `Preferences` at the top of `<body>`. On the server it renders one inline script as its first child, which puts every saved value on its `data-*` attribute as the page loads, before React hydrates, so CSS that selects those attributes is right from the first paint. Preferences hold functions, which can't cross from a Server Component as props, so give them to `Preferences` in a client module:
+
+```tsx title="app-preferences.tsx"
+"use client"
+
+import { Preferences } from "@ui-sdk/react/preferences"
+import { colorScheme, skinTone } from "./preferences"
+
+function AppPreferences({ children }: { children: React.ReactNode }) {
+  return (
+    <Preferences preferences={[colorScheme, skinTone]}>{children}</Preferences>
+  )
+}
+
+export { AppPreferences }
+```
+
+```tsx title="root.tsx"
+import { AppPreferences } from "./app-preferences"
+
+function Root({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en" suppressHydrationWarning>
+      <body>
+        <AppPreferences>{children}</AppPreferences>
+      </body>
+    </html>
+  )
+}
+
+export { Root }
+```
+
+A preference made with `global: true` goes on `<html>`, which the script sets before hydration, so `<html>` needs `suppressHydrationWarning`. Pass `nonce` to `Preferences` if your Content Security Policy only allows inline scripts with one.
+
+Content that reads a preference through `usePreference` renders the default on the server and the saved value right after hydration. Style by the attribute instead wherever the first paint has to be right, as [Style by Preferences](./core.md#style-by-preferences) shows.
+
+#### Read a Cookie on the Server
+
+A preference kept in a cookie can render on the server too, content included. Read the request's `Cookie` header on the server, however your server or framework gives you the request, and pass it to your root as a prop, like `<Root cookie={request.headers.get("cookie")}>`. A preference made from a request belongs to that request, so create it in the client boundary, once per render of the app, and share it through context:
+
+```tsx title="root.tsx"
+import { AppPreferences } from "./app-preferences"
+
+function Root({
+  cookie,
+  children,
+}: {
+  cookie: string | null
+  children: React.ReactNode
+}) {
+  return (
+    <html lang="en" suppressHydrationWarning>
+      <body>
+        <AppPreferences cookie={cookie}>{children}</AppPreferences>
+      </body>
+    </html>
+  )
+}
+
+export { Root }
+```
+
+```tsx title="app-preferences.tsx"
+"use client"
+
+import { createCookieStorage, createPreference } from "@ui-sdk/core"
+import { Preferences } from "@ui-sdk/react/preferences"
+import { createContext, useState } from "react"
+
+const createSkinTone = (cookie: string | null) =>
+  createPreference({
+    values: ["default", "light", "medium", "dark"],
+    defaultValue: "default",
+    attribute: "data-skin-tone",
+    storage: createCookieStorage("skin-tone", { cookie }),
+  })
+
+const SkinToneContext = createContext<ReturnType<typeof createSkinTone> | null>(
+  null
+)
+
+function AppPreferences({
+  cookie,
+  children,
+}: {
+  cookie: string | null
+  children: React.ReactNode
+}) {
+  const [skinTone] = useState(() => createSkinTone(cookie))
+  return (
+    <SkinToneContext value={skinTone}>
+      <Preferences preferences={[skinTone]}>{children}</Preferences>
+    </SkinToneContext>
+  )
+}
+
+export { AppPreferences, SkinToneContext }
+```
+
+The server reads the value from `cookie`, and the browser from `document.cookie`, so both render it and hydration matches. `usePreference(skinTone)` returns the saved value from the first render.
+
+#### Render the Storage Script Yourself
+
+`Preferences` is the usual way. For one component that keeps its own value, like a toolbar's density, a storage's `script` returns the same kind of inline script for a single element. Render it right after the element, since it writes to the element right before it:
+
+```tsx title="toolbar.tsx"
+"use client"
+
+import { createLocalStorage } from "@ui-sdk/core"
+import { useEffect, useState, useSyncExternalStore } from "react"
+
+const density = createLocalStorage("density")
+const script = density.script({
+  attribute: "data-density",
+  values: ["comfortable", "compact"],
+})
+const noSubscribe = () => () => {}
+
+function Toolbar({ children }: { children: React.ReactNode }) {
+  const [value, setValue] = useState("comfortable")
+  // True on the server and while hydrating, when the script is in the HTML.
+  const fromServer = useSyncExternalStore(
+    noSubscribe,
+    () => false,
+    () => true
+  )
+  useEffect(
+    () => setValue(density.get() === "compact" ? "compact" : "comfortable"),
+    []
+  )
+  return (
+    <>
+      <div data-density={value} suppressHydrationWarning>
+        {children}
+      </div>
+      {fromServer && script ? (
+        <script dangerouslySetInnerHTML={{ __html: script }} />
+      ) : null}
+    </>
+  )
+}
+
+export { Toolbar }
+```
+
+- **Only from the server.** The browser never runs a script React inserts, and React warns about one, so leave it out of a render in the browser only. `fromServer` is true on the server and while hydrating, and false after.
+- **The element differs until hydration.** The script changes its attribute before React hydrates, so `suppressHydrationWarning` goes on that element. After hydration, render the saved value from state, as above.
+- **Shared by ID.** Every script with the same storage kind and ID reads the storage once, however many elements render it, and the scripts are identical, so compression shrinks the repeats.
+- **Only safe values.** Any script on your site can write the saved value, so `script` only sets attributes that start with `data-`, and only to one of `values`.
+- **Not for cookies.** A cookie storage's `script` returns undefined, since the server reads the cookie and renders the value itself.
+
+To run before the page's content at all, render `preferencesScript([...])` from `@ui-sdk/core` in `<head>` yourself. Only global preferences make sense there, since the others go on the script's parent element.
+
+### Keep the First Render Consistent
+
+Use the same initial values on the server and client. Read browser-only values in an effect or event handler, after hydration.
+
+#### IDs
+
+Parts generate IDs for their relationships, such as a Dialog trigger’s `aria-controls` and a Field label’s `for`. You usually do not need to supply them.
+
+Pass an explicit `id` when something outside the component needs to refer to a part. On the server, render order matters: if a Field label renders before a control with your ID, the label initially uses the generated ID. Hydration updates the reference to yours. The same applies to Dialog triggers, titles, and descriptions.
+
+Keep a part with your ID in the same Suspense boundary as the parts that reference it so they hydrate together. Pass the ID to the part or its `render` element; an ID assigned inside a render function cannot be read ahead and is picked up during hydration.
+
+Use classes or data attributes for styling, rather than generated IDs.
+
+Popups render in place, so they don't need a portal root in your server layout. [Popups](./popups.md) covers their placement and containers; [Forms](./forms.md) covers submission and validation.
+
+## Rendering Primitives
+
+This page renders the rating from [Compose Behaviors](./core.md#compose-behaviors). Start with that guide's [complete `rating.ts`](./core.md#complete-primitive): it already handles selection, arrow keys, and focus. Here we'll connect its `root` and `star` slots to React.
+
+### Create the Parts
+
+`createParts` maps slots to elements. Save this beside `rating.ts`:
+
+```ts title="rating-parts.ts"
+"use client"
+
+import { createParts } from "@ui-sdk/react/primitive"
+import { rating } from "./rating"
+
+const { Root: RatingRoot, Star: RatingStar } = createParts(rating, {
+  root: "div",
+  star: "button",
+})
+
+export { RatingRoot, RatingStar }
+```
+
+`Root` creates the instance and shares it with the parts inside. Each mapped slot becomes a component. Slot names become Pascal case: `star` becomes `Star`, and `tab-icon` would become `TabIcon`.
+
+If you leave out the `root` tag, `Root` still shares the instance but renders only its children.
+
+### Render the Rating
+
+The root accepts the primitive's options and the element's props. Each star receives its slot value and a name a screen reader can announce:
+
+```tsx
+"use client"
+
+import { RatingRoot, RatingStar } from "./rating-parts"
+
+function Example() {
+  return (
+    <RatingRoot defaultValue={4} aria-label="Rating" className="flex gap-1">
+      {Array.from({ length: 5 }, (_, index) => index + 1).map((star) => (
+        <RatingStar
+          key={star}
+          value={String(star)}
+          aria-label={`${star} ${star === 1 ? "star" : "stars"}`}
+          className="opacity-40 data-filled:opacity-100"
+        >
+          ★
+        </RatingStar>
+      ))}
+    </RatingRoot>
+  )
+}
+
+export { Example }
+```
+
+The primitive supplies `data-filled`; these classes make the filled stars easier to see. [Styling and Animation](./styling-and-animation.md) covers other ways to style parts.
+
+Generated parts also support the same `render` prop and state callbacks as the components in the catalog. Use [Parts and Composition](./parts-and-composition.md) when you want to change their markup.
+
+### Wrap the Parts
+
+If callers always want a row of stars, wrap the parts in one `Rating` component. This version adds `max` and `starLabel` while forwarding the primitive options and root element props. You can use it instead of the separate parts above.
+
+```tsx
+// rating-react.tsx
+"use client"
+
+import { createParts, type PartProps } from "@ui-sdk/react/primitive"
+import { rating, type RatingOptions } from "./rating"
+
+const parts = createParts(rating, { root: "div", star: "button" })
+
+function Rating({
+  max = 5,
+  starLabel = (star) => `${star} ${star === 1 ? "star" : "stars"}`,
+  ...props
+}: RatingOptions & {
+  max?: number
+  starLabel?: (star: number) => string
+} & Omit<PartProps<"div">, "defaultValue">) {
+  return (
+    <parts.Root {...props}>
+      {Array.from({ length: max }, (_, index) => index + 1).map((star) => (
+        <parts.Star
+          key={star}
+          value={String(star)}
+          aria-label={starLabel(star)}
+        >
+          ★
+        </parts.Star>
+      ))}
+    </parts.Root>
+  )
+}
+
+export { Rating }
+```
+
+```tsx
+import { Rating } from "./rating-react"
+
+function Example() {
+  return (
+    <Rating
+      defaultValue={4}
+      aria-label="Rating"
+      className="flex gap-1 [&>button]:opacity-40 [&>[data-filled]]:opacity-100"
+    />
+  )
+}
+
+export { Example }
+```
+
+Pass classes to the rendered parts. [Styling and Animation](./styling-and-animation.md) also shows how to use CSS Modules.
+
+### Add Logic to a Part
+
+Keep `createParts` when mapping slots to elements is enough. [Custom Parts](./custom-parts.md) uses the same rating to show how `usePrimitive` and `usePart` let you write your own root or child part.
+
+## Custom Parts
+
+The parts from [Rendering Primitives](./rendering.md) are enough until one needs its own logic. You can replace just that part and keep the same `rating.ts` definition from [Compose Behaviors](./core.md#complete-primitive).
+
+### Write a Root Part
+
+Here's a replacement for the generated `RatingRoot`. `usePrimitive` creates its instance, and `usePart` connects the `root` slot:
+
+```tsx title="rating-root.tsx"
+"use client"
+
+import type { StateOf } from "@ui-sdk/core"
+import { usePart, usePrimitive, type PartProps } from "@ui-sdk/react/primitive"
+import { rating, type RatingOptions } from "./rating"
+
+function RatingRoot({
+  value,
+  defaultValue,
+  onValueChange,
+  ...props
+}: RatingOptions &
+  Omit<PartProps<"div", StateOf<typeof rating, "root">>, "defaultValue">) {
+  const handle = usePrimitive(rating, { value, defaultValue, onValueChange })
+  return usePart(handle, "root", {}, props, "div")
+}
+
+export { RatingRoot }
+```
+
+Pass primitive options to `usePrimitive` and element props to `usePart`. The empty `{}` is for slot props; this root doesn't need any. `usePart` shares the instance with child parts and renders nothing when the slot isn't present.
+
+The adapter keeps options current and manages the instance's lifetime. Call `handle.api` from event handlers or effects. To render changing state, use a part's `children` or `render` function; reading `handle.state` alone doesn't subscribe to changes.
+
+### Connect a Child Part
+
+A child can pass the primitive itself to `usePart`. It finds the instance shared by the root above it.
+
+This `RatingStar` works inside the manual root above or the generated `RatingRoot`. It adds a default accessible label:
+
+```tsx
+"use client"
+
+import { usePart, type PartProps } from "@ui-sdk/react/primitive"
+import { rating } from "./rating"
+
+function RatingStar({
+  value,
+  ...props
+}: { value: string } & Omit<PartProps<"button">, "value">) {
+  const label = `${value} ${value === "1" ? "star" : "stars"}`
+  return usePart(
+    rating,
+    "star",
+    { value },
+    { "aria-label": label, ...props },
+    "button"
+  )
+}
+
+export { RatingStar }
+```
+
+`{ value }` identifies the star. The remaining props go to its button. A caller can override the label with `aria-label`.
+
+Use it in place of the generated star in [Render the Rating](./rendering.md#render-the-rating). Keep it inside `RatingRoot` so it can find the instance.
+
+### Merge Props
+
+Use `mergeProps` when your part adds props that need to combine with the caller's. For example, an input can select its text on focus while still accepting an `onFocus` handler:
+
+```tsx
+"use client"
+
+import {
+  mergeProps,
+  renderElement,
+  type PartProps,
+} from "@ui-sdk/react/primitive"
+import type { FocusEvent } from "react"
+
+function SelectOnFocusInput({ render, ...props }: PartProps<"input">) {
+  const own = {
+    onFocus: (event: FocusEvent<HTMLInputElement>) =>
+      event.currentTarget.select(),
+  }
+  return renderElement("input", mergeProps(own, props), render)
+}
+
+export { SelectOnFocusInput }
+```
+
+The caller's handler runs first and can call `preventDefault()` to skip yours. Class names join, styles merge, and refs combine. Other values from later arguments win; `undefined` doesn't replace an existing value.
+
+For native `pointerenter` and `pointerleave` slot listeners, canceling React's handler doesn't cancel the slot's listener.
+
+### An Element Without a Primitive
+
+`renderElement` also works for a plain wrapper. It gives the wrapper the same `render` prop as the other parts:
+
+```tsx
+"use client"
+
+import { renderElement, type PartProps } from "@ui-sdk/react/primitive"
+
+function Card({ render, ...props }: PartProps<"div">) {
+  return renderElement("div", props, render)
+}
+
+export { Card }
+```
+
+`PartProps` supplies the element props and `render`. Add its second type argument when `className`, `style`, or `children` should receive your part's state.
+
+`renderElement` uses no hooks, so a wrapper like `Card` also works in a Server Component. Anything built on `usePrimitive`, `usePart` or `createParts` still needs a client component, since those use hooks. [Server Rendering](./server-rendering.md#wrappers-in-a-server-component) shows one.
+
+### Compose a Popup
+
+A custom part can render an existing Popover or Dialog and connect its open state. [Compose Ours](./core.md#compose-ours) shows that connection with an emoji picker.
+
+## Components
+
+Each page has the component's composition, examples, styling hooks and every prop.
+
+- [Accordion](./components/accordion.md): Show and hide sections of content from their headings. Import from `@ui-sdk/react/accordion`.
+- [Alert Dialog](./components/alert-dialog.md): Ask someone to confirm an action before you continue. Import from `@ui-sdk/react/alert-dialog`.
+- [Autocomplete](./components/autocomplete.md): Suggest text while someone types, without limiting what they can enter. Import from `@ui-sdk/react/autocomplete`.
+- [Avatar](./components/avatar.md): Show an image with a fallback while it loads or if it fails. Import from `@ui-sdk/react/avatar`.
+- [Button](./components/button.md): Run an action, show that it's working, and keep it reachable when disabled. Import from `@ui-sdk/react/button`.
+- [Calendar](./components/calendar.md): Choose one date, several dates, or a range from a month grid. Import from `@ui-sdk/react/calendar`.
+- [Carousel](./components/carousel.md): Page through slides with native scrolling, keyboard controls, and optional rotation. Import from `@ui-sdk/react/carousel`.
+- [Checkbox](./components/checkbox.md): Choose one or more options, individually or as a group. Import from `@ui-sdk/react/checkbox`.
+- [Collapsible](./components/collapsible.md): Show and hide a panel, preserve its contents, and animate its height. Import from `@ui-sdk/react/collapsible`.
+- [Color Picker](./components/color-picker.md): Choose a color by dragging across an area and along sliders, typing any CSS color, or picking a preset. Import from `@ui-sdk/react/color-picker`.
+- [Combobox](./components/combobox.md): Search a list of options and choose one or several values. Import from `@ui-sdk/react/combobox`.
+- [Command](./components/command.md): Search commands, run actions, and open pages of more choices. Import from `@ui-sdk/react/command`.
+- [Date Input](./components/date-input.md): Type a date one part at a time, in the order your user's language writes it. Import from `@ui-sdk/react/date-input`.
+- [Date Picker](./components/date-picker.md): Type a date or choose one from a calendar, with support for ranges and forms. Import from `@ui-sdk/react/date-picker`.
+- [Dialog](./components/dialog.md): Open a focused task over the page. Import from `@ui-sdk/react/dialog`.
+- [Drawer](./components/drawer.md): A sheet you can open, drag, and resize from an edge of the screen. Import from `@ui-sdk/react/drawer`.
+- [Field](./components/field.md): Connect a form control to its label, description, and validation errors. Import from `@ui-sdk/react/field`.
+- [File Input](./components/file-input.md): Choose, drop, or paste files, validate them, and submit them with a form. Import from `@ui-sdk/react/file-input`.
+- [Hover Card](./components/hover-card.md): Preview a link on hover or keyboard focus while keeping its normal navigation. Import from `@ui-sdk/react/hover-card`.
+- [Image Cropper](./components/image-cropper.md): Choose the part of an image to keep by moving and resizing a selection, or by panning and zooming the image under it. Import from `@ui-sdk/react/image-cropper`.
+- [Input](./components/input.md): Enter text, add a clear button, and connect the value to your form or state. Import from `@ui-sdk/react/input`.
+- [Label](./components/label.md): Name any control with a label, and let a press on the label reach it. Import from `@ui-sdk/react/label`.
+- [Listbox](./components/listbox.md): Choose one or several options from an always-visible list. Import from `@ui-sdk/react/listbox`.
+- [Menu](./components/menu.md): Choose actions and settings from a button or a context menu. Import from `@ui-sdk/react/menu`.
+- [Menubar](./components/menubar.md): Move between an application’s menus with one tab stop. Import from `@ui-sdk/react/menubar`.
+- [Meter](./components/meter.md): Show a measurement within a known range, such as storage used or an account quota. Import from `@ui-sdk/react/meter`.
+- [Navigation Menu](./components/navigation-menu.md): Groups site links into panels that open from a row of triggers. Import from `@ui-sdk/react/navigation-menu`.
+- [Number Input](./components/number-input.md): Enter numbers, step through values, and format them for a locale. Import from `@ui-sdk/react/number-input`.
+- [OTP Input](./components/otp-input.md): Enter a one-time code with support for pasting, autofill, and native form validation. Import from `@ui-sdk/react/otp-input`.
+- [Pagination](./components/pagination.md): Navigate pages with buttons, links, or your router. Import from `@ui-sdk/react/pagination`.
+- [Password Input](./components/password-input.md): Enter a password, show or hide it, and use it in a native form. Import from `@ui-sdk/react/password-input`.
+- [Popover](./components/popover.md): Edit or explore something beside its trigger. Import from `@ui-sdk/react/popover`.
+- [Preferences](./components/preferences.md): Apply user preferences to data attributes so your styles can follow them. Import from `@ui-sdk/react/preferences`.
+- [Progress](./components/progress.md): Show a task’s progress, or an indeterminate state while its progress is unknown. Import from `@ui-sdk/react/progress`.
+- [Radio](./components/radio.md): Choose one option, move the selection with arrow keys, and submit it with a form. Import from `@ui-sdk/react/radio`.
+- [Rating](./components/rating.md): Pick a score from a row of stars, whole or half, with a preview as the pointer moves over them. Import from `@ui-sdk/react/rating`.
+- [Resizable](./components/resizable.md): Resize, collapse, and save panel layouts with pointer and keyboard controls. Import from `@ui-sdk/react/resizable`.
+- [Scroll Area](./components/scroll-area.md): Add styled scrollbars, edge indicators, and follow-to-end behavior to native scrolling. Import from `@ui-sdk/react/scroll-area`.
+- [Segmented Control](./components/segmented-control.md): Pick one of a few options from a row of buttons, with an indicator that slides to the choice. Import from `@ui-sdk/react/segmented-control`.
+- [Select](./components/select.md): Choose one value or several from a popup list. Import from `@ui-sdk/react/select`.
+- [Separator](./components/separator.md): Divide groups of content with a horizontal or vertical line. Import from `@ui-sdk/react/separator`.
+- [Slider](./components/slider.md): Adjust a number or a range with draggable thumbs and keyboard controls. Import from `@ui-sdk/react/slider`.
+- [Switch](./components/switch.md): Turn a setting on or off. Import from `@ui-sdk/react/switch`.
+- [Tabs](./components/tabs.md): Switch between related panels with one tab selected at a time. Import from `@ui-sdk/react/tabs`.
+- [Textarea](./components/textarea.md): Enter multiple lines of text, grow the field as you type, and connect it to a form. Import from `@ui-sdk/react/textarea`.
+- [Time Input](./components/time-input.md): Type a time one part at a time, on the clock your user's language uses.
+- [Timeline](./components/timeline.md): Show dated events in order, like an activity feed, a changelog or an order's progress, with arrow keys between them. Import from `@ui-sdk/react/timeline`.
+- [Toast](./components/toast.md): Show notifications with actions, timed dismissal, and screen reader announcements. Import from `@ui-sdk/react/toast`.
+- [Toggle](./components/toggle.md): Keep a button pressed, or group toggles with a shared value and arrow-key navigation. Import from `@ui-sdk/react/toggle`.
+- [Token Input](./components/token-input.md): Mix editable text with tokens for files, people, tags, and other references. Import from `@ui-sdk/react/token-input`.
+- [Toolbar](./components/toolbar.md): Give buttons, toggles, menus and fields one tab stop with arrow-key navigation. Import from `@ui-sdk/react/toolbar`.
+- [Tooltip](./components/tooltip.md): Name a control or add a short hint on hover and keyboard focus. Import from `@ui-sdk/react/tooltip`.
+- [Tree](./components/tree.md): Browse a hierarchy of files, pages, or choices with expandable branches. Import from `@ui-sdk/react/tree`.
+- [Trigger Menu](./components/trigger-menu.md): "Opens suggestions at the caret when you type a trigger such as @, /, or #." Import from `@ui-sdk/react/trigger-menu`.
+- [Waterfall](./components/waterfall.md): Show a trace or a page's requests as bars on a shared time axis, with spans that expand to show what they started. Import from `@ui-sdk/react/waterfall`.
+
+## Hooks
+
+### Async Options
+
+`useAsyncOptions` loads items as someone types. It waits for typing to pause, cancels requests that are replaced, and keeps the previous results visible while loading.
+
+Change the movie search and wait for the results. Use the arrow keys to choose a movie, then press Enter.
+
+#### Load Results
+
+Pass a loader to the hook. This example expects `/api/movies` to return an array of movie titles:
+
+```tsx
+"use client"
+
+import { useAsyncOptions } from "@ui-sdk/react/async-options"
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxInput,
+} from "@ui-sdk/react/combobox"
+
+function MovieSearch() {
+  const movies = useAsyncOptions<string>(async (query, { signal }) => {
+    const response = await fetch(`/api/movies?q=${encodeURIComponent(query)}`, {
+      signal,
+    })
+    if (!response.ok) throw new Error("Couldn't load movies")
+    return response.json()
+  })
+
+  return (
+    <Combobox
+      items={movies.items}
+      filter={false}
+      status={movies.status}
+      onQueryChange={movies.setQuery}
+    >
+      <ComboboxInput aria-label="Movie" placeholder="Search movies…" />
+      <ComboboxContent />
+    </Combobox>
+  )
+}
+
+export { MovieSearch }
+```
+
+Pass `signal` to `fetch` so a newer search can cancel the request. The hook also cancels on unmount.
+
+`filter={false}` leaves matching and result order to the server. `status` tells the component when it's busy. Use `ComboboxStatus` and `ComboboxEmpty` to show loading, error, and empty messages, as in the demo.
+
+The same pattern works with [Select](./components/select.md#async-search), [Autocomplete](./components/autocomplete.md#async-suggestions), and [Command](./components/command.md#async-results).
+
+#### Choose When to Load
+
+The hook's second argument sets its starting behavior:
+
+| Option      | What It Does                                                                    | Default |
+| ----------- | ------------------------------------------------------------------------------- | ------- |
+| `debounce`  | How long typing must pause, in milliseconds.                                    | `200`   |
+| `query`     | The starting search text.                                                       | `""`    |
+| `immediate` | Loads that text as soon as the component mounts.                                | `false` |
+| `minLength` | Characters the text needs before anything loads. Shorter text clears the items. | `0`     |
+
+For example, add `{ immediate: true, debounce: 300 }` after the loader to fetch initial choices and wait a little longer between searches. Until that first load starts, `status` is already `"loading"`, so the list never flashes an empty state. If you set `query`, use the same starting text for the component's `defaultQuery`.
+
+#### Load More
+
+For paged results, the loader also receives `page`, starting at `0`. Return `{ items, hasMore }`:
+
+```tsx
+"use client"
+
+import { useAsyncOptions } from "@ui-sdk/react/async-options"
+
+function useMoviePages() {
+  return useAsyncOptions<string>(async (query, { signal, page }) => {
+    const response = await fetch(
+      `/api/movies?q=${encodeURIComponent(query)}&page=${page}`,
+      { signal }
+    )
+    if (!response.ok) throw new Error("Couldn't load movies")
+    const data: { titles: string[]; next: number | null } =
+      await response.json()
+    return { items: data.titles, hasMore: data.next !== null }
+  })
+}
+
+export { useMoviePages }
+```
+
+Call `useMoviePages()` inside your component, then pass `onLoadMore={movies.loadMore}` to Combobox alongside the props above. It asks for another page when scrolling or keyboard navigation reaches the last item. The hook appends the new items.
+
+Open the movie list and scroll down, or use Arrow Down to reach the last result. The next page is added to the list.
+
+#### Retry a Search
+
+`status` is `"loading"` while a request is pending, `"error"` after a failure, and `"idle"` otherwise. `error` holds the failure, and the previous items stay available.
+
+Call `movies.reload()` from a retry button to load the current query again, starting at page `0`. `movies.hasMore` tells you whether another page is available.
+
+### Shortcuts
+
+`useShortcut` registers a keyboard shortcut while your component is mounted. Use it for actions outside a particular control. For a component that already accepts `shortcut`, such as a dialog trigger, use that prop directly.
+
+Press N to create a note. Press Command+S on Mac or Control+S elsewhere to save. The buttons run the same actions.
+
+#### Register a Shortcut
+
+Keys are joined with `+`. `mod` means Command on Apple platforms and Control elsewhere:
+
+```tsx
+"use client"
+
+import { useShortcut } from "@ui-sdk/react/shortcuts"
+import { useState } from "react"
+
+function NewNote() {
+  const [count, setCount] = useState(0)
+  const addNote = () => setCount((count) => count + 1)
+  useShortcut("mod+enter", addNote, { description: "New note" })
+
+  return <button onClick={addNote}>New note ({count})</button>
+}
+
+export { NewNote }
+```
+
+The hook uses your latest handler and unregisters on unmount. You don't need `useCallback`. Pass `null` instead of keys to leave a shortcut unregistered.
+
+#### Show the Keys
+
+`useShortcutHint` formats keys for the current platform and supplies `aria-keyshortcuts` for the control:
+
+```tsx
+"use client"
+
+import { useShortcut, useShortcutHint } from "@ui-sdk/react/shortcuts"
+
+function SaveButton({ onSave }: { onSave: () => void }) {
+  useShortcut("mod+s", onSave, { description: "Save" })
+  const hint = useShortcutHint("mod+s")
+
+  return (
+    <button onClick={onSave} aria-keyshortcuts={hint.ariaKeyshortcuts}>
+      Save <kbd aria-hidden="true">{hint.text}</kbd>
+    </button>
+  )
+}
+
+export { SaveButton }
+```
+
+This shows `⌘S` on Apple platforms and `Ctrl+S` elsewhere. The hook keeps the server and first client render consistent, then updates after mount.
+
+Outside rendering, use `formatShortcut` for display text or `ariaKeyshortcuts` for the ARIA value. Both are exported from the same entry. The hint's text and `formatShortcut` both keep their left-to-right order on a right-to-left page, because two invisible characters wrap the text. Compare the original keys, not the formatted hint.
+
+#### While Someone Is Typing
+
+Shortcuts with Command, Control, or Option can run in a text field. Plain letters and other keys stay available for typing.
+
+Set `allowInInput: true` when the shortcut should work there too, such as Escape to clear a search. `when` checks a condition each time the keys are pressed; it can keep a Save shortcut inactive until there's text. A shortcut runs once per press. Set `repeat: true` to keep it running while the keys are held, like `j` moving down a list.
+
+Focus the note and type some text. Press Command+Enter on Mac or Control+Enter elsewhere to save it, or Escape to clear it. Move focus outside the note to turn off its shortcuts.
+
+#### Limit a Shortcut to an Area
+
+Use a named `scope` for an editor or another part of the app. Turn it on while that area has focus:
+
+```tsx
+"use client"
+
+import { shortcuts, useShortcut } from "@ui-sdk/react/shortcuts"
+import { useEffect, useState } from "react"
+
+function Note() {
+  const [text, setText] = useState("")
+  useEffect(() => () => shortcuts.setScope("note", false), [])
+  useShortcut("escape", () => setText(""), {
+    scope: "note",
+    allowInInput: true,
+  })
+
+  return (
+    <textarea
+      aria-label="Note"
+      value={text}
+      onChange={(event) => setText(event.target.value)}
+      onFocus={() => shortcuts.setScope("note", true)}
+      onBlur={() => shortcuts.setScope("note", false)}
+    />
+  )
+}
+
+export { Note }
+```
+
+A `when: () => text.length > 0` option can further limit when it runs. Scope names are shared, so choose one for each area you want to enable together.
+
+#### Inside a Popup
+
+Page shortcuts pause while a modal is open. Pass `layer` to make a shortcut belong to a popup instead:
+
+```tsx
+"use client"
+
+import { DialogContent } from "@ui-sdk/react/dialog"
+import { useShortcut } from "@ui-sdk/react/shortcuts"
+import { useRef } from "react"
+
+function EditorContent({ onSave }: { onSave: () => void }) {
+  const content = useRef<HTMLDivElement>(null)
+  useShortcut("mod+enter", onSave, { layer: content, description: "Save" })
+
+  return <DialogContent ref={content}>Edit your note here.</DialogContent>
+}
+
+export { EditorContent }
+```
+
+Render this part inside a Dialog. Its shortcut runs only while that dialog is open. `layer` also accepts an element or a function that returns one.
+
+When shortcuts share the same keys, the topmost open layer wins, then the most recently registered shortcut. Development builds warn about duplicate keys in the same place.
+
+#### List Available Shortcuts
+
+Call `shortcuts.list()` when a help screen opens. It returns the shortcuts that can run now, with their `keys`, formatted `hint`, and `description`:
+
+```ts
+import { shortcuts } from "@ui-sdk/react/shortcuts"
+
+const labels = shortcuts
+  .list()
+  .map(({ hint, description }) => `${hint} ${description ?? ""}`)
+```
+
+Add descriptions when registering shortcuts so the help screen can explain each action.
